@@ -14,7 +14,7 @@ class FilesMemoryImpl extends Files {
   }
 
   @override
-  Future<void> write(String path, String content) async{
+  Future<void> write(String path, String content) async {
     _files[path] = content;
   }
 }

@@ -1,65 +1,69 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
-import 'package:todo_clean_architecture/domain/model/todo.dart';
-import 'package:todo_clean_architecture/domain/model/todos.dart';
 
-import '../../domain/repository/todos.dart';
+import '../../domain/model/todo.dart';
+
+import '../../domain/model/todos.dart';
+import '../../domain/repository/todo.dart';
 import '../source/files.dart';
 
-class TodosRepositoryImpl extends TodosRepository {
+class TodosRepositoryImpl implements TodosRepository {
   TodosRepositoryImpl(this.files);
   final Files files;
-  late final String path = 'todos.json';
+
+  late final String _path = 'todo.json';
 
   @override
   Future<void> deleteAllTodos() async {
-    await files.delete(path);
+    await files.delete(_path);
   }
 
   @override
-  Future<void> deleteTodo(Todo todo) async {
+  Future<void> deleteTodo(String todoId) async {
     final todos = await loadTodos();
+    final newTodos =
+        todos.values.where((foundTodo) => foundTodo.id != todoId).toList();
 
-    // Remove the todo from the list
-    final newTodos = todos.values.where((t) => t.id != todo.id).toList();
-
-    // Save the new list
-    await files.write(path, jsonEncode(Todos(values: newTodos).toJson()));
-  }
-
-  @override
-  Future<Todos> loadTodos() async {
-    // load the todos from path
-    final content = await files.read(path);
-
-    if (content == null) return const Todos(values: []);
-
-    // Transform it to json and then the todos list
-
-    return Todos.fromJson(jsonDecode(content));
+    await files.write(_path, jsonEncode(Todos(values: newTodos).toJson()));
   }
 
   @override
   Future<Todo?> getTodoById(String id) async {
     final todos = await loadTodos();
 
-    // search the todo by id
     return todos.values.firstWhereOrNull((todo) => todo.id == id);
+  }
+
+  @override
+  Future<Todos> loadTodos() async {
+    final content = await files.read(_path);
+    if (content == null) return const Todos(values: []);
+
+    return Todos.fromJson(jsonDecode(content));
   }
 
   @override
   Future<void> saveTodo(Todo todo) async {
     final todos = await loadTodos();
 
-    // Remove the todo from the list if it already exists
-    final newTodos =
-        todos.values.where((element) => element.id != todo.id).toList();
-
-    // Add the new todo
-    newTodos.add(todo);
-
-    // save the new list
-    await files.write(path, jsonEncode(Todos(values: newTodos).toJson()));
+    // edit the todo if it exists
+    final existing =
+        todos.values.firstWhereOrNull((foundTodo) => foundTodo.id == todo.id);
+    if (existing != null) {
+      final newTodo = existing.copyWith(
+        title: todo.title,
+        description: todo.description,
+        completed: todo.completed,
+      );
+      final newTodos = todos.values
+          .map((foundTodo) => foundTodo.id == todo.id ? newTodo : foundTodo)
+          .toList();
+      await files.write(_path, jsonEncode(Todos(values: newTodos).toJson()));
+      return;
+    } else {
+      final newTodos = [...todos.values, todo];
+      await files.write(_path, jsonEncode(Todos(values: newTodos).toJson()));
+    }
   }
 }

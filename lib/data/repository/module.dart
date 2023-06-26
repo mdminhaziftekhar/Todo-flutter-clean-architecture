@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:todo_clean_architecture/data/repository/todos_impl.dart';
-import 'package:todo_clean_architecture/data/source/module.dart';
-import 'package:todo_clean_architecture/domain/repository/todos.dart';
+
+import '../../domain/repository/todo.dart';
+import '../source/module.dart';
+import 'todos_impl.dart';
 
 final todosProvider = Provider<TodosRepository>((ref) {
   return TodosRepositoryImpl(ref.read(filesProvider));

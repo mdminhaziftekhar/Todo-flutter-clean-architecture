@@ -7,7 +7,9 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Todos'),
+        title: const Text(
+          'Todo Clean Architecture',
+        ),
       ),
     );
   }
